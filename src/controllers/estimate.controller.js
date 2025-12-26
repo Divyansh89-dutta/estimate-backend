@@ -62,28 +62,28 @@ export const createEstimate = async (req, res) => {
  */
 export const downloadPDF = async (req, res) => {
   try {
-    const estimate = await Estimate.findById(req.params.id);
+    const estimateId = req.params.id;
+    const estimate = await Estimate.findById(estimateId); // or your fetch logic
 
     if (!estimate) {
       return res.status(404).json({ message: "Estimate not found" });
     }
 
-    if (estimate.createdBy.toString() !== req.user.id) {
-      return res.status(403).json({ message: "Forbidden" });
-    }
-
     const pdfBuffer = await generatePDF(estimate);
+
+    const filename = `estimate-${estimate.estimateNo || estimateId}.pdf`;
 
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader(
       "Content-Disposition",
-      `attachment; filename=estimate-${estimate.estimateNo}.pdf`
+      `attachment; filename="${filename}"`
     );
+    res.setHeader("Content-Length", pdfBuffer.length);
 
-    res.end(pdfBuffer);
-  } catch (error) {
-    console.error("PDF download error:", error.message);
-    res.status(500).json({ message: "Failed to generate PDF" });
+    return res.status(200).send(pdfBuffer);
+  } catch (err) {
+    console.error("downloadPDF error:", err);
+    return res.status(500).json({ message: "Failed to generate PDF" });
   }
 };
 
