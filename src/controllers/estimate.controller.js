@@ -63,7 +63,7 @@ export const createEstimate = async (req, res) => {
 export const downloadPDF = async (req, res) => {
   try {
     const estimateId = req.params.id;
-    const estimate = await Estimate.findById(estimateId); // or your fetch logic
+    const estimate = await Estimate.findById(estimateId);
 
     if (!estimate) {
       return res.status(404).json({ message: "Estimate not found" });
