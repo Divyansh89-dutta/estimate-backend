@@ -1,36 +1,36 @@
-import "./src/config/env.js";
+import express from "express";
+import cors from "cors";
 
-import http from "http";
-import app from "./src/app.js";
-import connectDB from "./src/config/db.js"; // 👈 default import
-import profileRoutes from "./src/routes/profile.routes.js";
-import authRoutes from "./src/routes/auth.routes.js";
-import estimateRoutes from "./src/routes/estimate.routes.js";
-import notificationRoutes from "./src/routes/notification.routes.js";
-import companyRoutes from "./src/routes/company.routes.js";
-import uploadRoutes from "./src/routes/upload.routes.js";
-import { Server } from "socket.io";
-import { socketHandler } from "./src/sockets/notification.socket.js";
+const app = express();
 
-// Connect Database
-connectDB();
+app.use(express.json());
 
-// Routes
-app.use("/api/auth", authRoutes);
-app.use("/api/estimate", estimateRoutes);
-app.use("/api/notifications", notificationRoutes);
-app.use("/api/company", companyRoutes);
-app.use("/api/profile", profileRoutes);
-app.use("/api/upload", uploadRoutes);
-// Server + Socket
-const server = http.createServer(app);
-const io = new Server(server, {
-  cors: { origin: "*" },
-});
-app.set("io", io); // Make io accessible in routes/controllers
-socketHandler(io);
+// CORS
+const allowedOrigins = [
+  "http://localhost:5173", // or 3000, whatever dev port
+  "https://estimate-frotented.vercel.app",
+];
 
-const PORT = process.env.PORT || 5000;
-server.listen(PORT, () =>
-  console.log(`🚀 Server running on port ${PORT}`)
+app.use(
+  cors({
+    origin(origin, callback) {
+      // allow REST tools or non-browser clients with no origin
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin)) return callback(null, true);
+      return callback(new Error("Not allowed by CORS"));
+    },
+    credentials: true, // if you ever send cookies
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+      "X-Requested-With",
+      "Accept",
+    ],
+  })
 );
+
+// If needed for preflight
+// app.options("*", cors());
+
+export default app;
