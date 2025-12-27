@@ -60,32 +60,65 @@ export const createEstimate = async (req, res) => {
 /**
  * DOWNLOAD PDF
  */
+// export const downloadPDF = async (req, res) => {
+//   try {
+//     const estimateId = req.params.id;
+//     const estimate = await Estimate.findById(estimateId);
+
+//     if (!estimate) {
+//       return res.status(404).json({ message: "Estimate not found" });
+//     }
+
+//     const pdfBuffer = await generatePDF(estimate);
+
+//     const filename = `estimate-${estimate.estimateNo || estimateId}.pdf`;
+
+//     res.setHeader("Content-Type", "application/pdf");
+//     res.setHeader(
+//       "Content-Disposition",
+//       `attachment; filename="${filename}"`
+//     );
+//     res.setHeader("Content-Length", pdfBuffer.length);
+
+//     return res.status(200).send(pdfBuffer);
+//   } catch (err) {
+//     console.error("downloadPDF error:", err);
+//     return res.status(500).json({ message: "Failed to generate PDF" });
+//   }
+// };
+
+
+import Estimate from "../models/Estimate.js";
+import { generatePDF } from "../services/pdf.service.js";
+
+/**
+ * DOWNLOAD PDF
+ * GET /api/estimate/:id/pdf
+ */
 export const downloadPDF = async (req, res) => {
   try {
-    const estimateId = req.params.id;
-    const estimate = await Estimate.findById(estimateId);
+    const estimate = await Estimate.findById(req.params.id);
 
     if (!estimate) {
-      return res.status(404).json({ message: "Estimate not found" });
+      return res.status(400).send("Invalid estimate ID");
     }
 
     const pdfBuffer = await generatePDF(estimate);
 
-    const filename = `estimate-${estimate.estimateNo || estimateId}.pdf`;
-
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader(
       "Content-Disposition",
-      `attachment; filename="${filename}"`
+      `attachment; filename="estimate-${estimate.estimateNo}.pdf"`
     );
     res.setHeader("Content-Length", pdfBuffer.length);
 
-    return res.status(200).send(pdfBuffer);
-  } catch (err) {
-    console.error("downloadPDF error:", err);
-    return res.status(500).json({ message: "Failed to generate PDF" });
+    return res.send(pdfBuffer);
+  } catch (error) {
+    console.error("Download PDF error:", error);
+    return res.status(500).json({ message: "PDF generation failed" });
   }
 };
+
 
 /**
  * UPDATE Estimate
